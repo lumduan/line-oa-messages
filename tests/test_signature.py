@@ -50,4 +50,11 @@ def test_health_and_index(webhook_client: TestClient) -> None:
     assert webhook_client.get("/line/health").json() == {"status": "ok"}
     index = webhook_client.get("/")
     assert index.status_code == 200
-    assert index.json()["webhook"] == "/line/webhook"
+    assert "/line/webhook" in index.json()["webhook"]
+
+
+def test_root_path_also_accepts_webhook(webhook_client: TestClient) -> None:
+    body = make_event_body()
+    resp = webhook_client.post("/", content=body, headers={"x-line-signature": sign(body)})
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "ok"}

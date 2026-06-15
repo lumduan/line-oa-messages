@@ -15,25 +15,15 @@ from src.services import persist_inbound_event, record_reply
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/line", tags=["line"])
+router = APIRouter(tags=["line"])
 parser = WebhookParser(settings.line_channel_secret)
 
 
-@router.get("/health")
-def health() -> dict[str, str]:
-    """Liveness probe."""
-    return {"status": "ok"}
+async def _ingest(request: Request, x_line_signature: str) -> dict[str, str]:
+    """Verify the signature against the RAW body, then persist + auto-echo.
 
-
-@router.post("/webhook")
-async def line_webhook(
-    request: Request,
-    x_line_signature: str = Header(...),
-) -> dict[str, str]:
-    """Receive a LINE webhook delivery.
-
-    The signature is verified against the RAW request body (HMAC-SHA256); the
-    body must not be re-serialized before verification.
+    The signature must be checked against the unmodified request bytes
+    (HMAC-SHA256); the body must not be re-serialized before verification.
     """
     body = (await request.body()).decode("utf-8")
     try:
@@ -63,6 +53,34 @@ async def line_webhook(
     return {"status": "ok"}
 
 
+@router.get("/line/health")
+def health() -> dict[str, str]:
+    """Liveness probe."""
+    return {"status": "ok"}
+
+
+@router.post("/line/webhook")
+async def line_webhook(
+    request: Request,
+    x_line_signature: str = Header(...),
+) -> dict[str, str]:
+    """Canonical LINE webhook endpoint."""
+    return await _ingest(request, x_line_signature)
+
+
+@router.post("/")
+async def root_webhook(
+    request: Request,
+    x_line_signature: str = Header(...),
+) -> dict[str, str]:
+    """Convenience webhook at the root path.
+
+    The webhook runs on its own host/subdomain, so LINE may be configured with
+    just ``https://<host>/``. Accept deliveries there too.
+    """
+    return await _ingest(request, x_line_signature)
+
+
 def build_webhook_app() -> FastAPI:
     """Build the FastAPI application that serves the LINE webhook (port 9990)."""
     app = FastAPI(title="LINE OA Webhook")
@@ -70,6 +88,6 @@ def build_webhook_app() -> FastAPI:
 
     @app.get("/")
     def index() -> dict[str, str]:
-        return {"service": "line-oa-webhook", "webhook": "/line/webhook"}
+        return {"service": "line-oa-webhook", "webhook": "/line/webhook (also POST /)"}
 
     return app

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - FastAPI **LINE webhook** at `POST /line/webhook` (port 9990) with `X-Line-Signature`
   HMAC-SHA256 verification over the raw request body (via `line-bot-sdk` v3).
+  Also accepted at the root path `POST /` (the webhook runs on its own subdomain).
 - **NiceGUI dashboard** (port 9991) with a live, auto-refreshing message table and a
   push-message form; both servers run in one process via `asyncio.gather`.
 - **SQLite persistence** with SQLAlchemy 2.0 typed models: `LineUser`, `Event`,
