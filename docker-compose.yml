@@ -1,0 +1,16 @@
+# One container, two ports:
+#   9990 -> LINE webhook (FastAPI)
+#   9991 -> dashboard (NiceGUI)
+# SQLite is persisted to ./data on the host via a bind mount.
+services:
+  app:
+    build: .
+    image: line-oa-messages:latest
+    container_name: line-oa-messages
+    env_file: .env
+    ports:
+      - "9990:9990"
+      - "9991:9991"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
