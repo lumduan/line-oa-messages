@@ -24,4 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Test suite (signature, persistence, services, client) with ≥80% coverage.
 - Thai-language `README.md`; English `CLAUDE.md` for contributor/agent guidance.
 
+### Changed
+- Rewrote `README.md` for non-developer readers: leads with the conversation-history
+  feature and a sample message table (real `text`/`image`/`sticker`/`file` types), and
+  folds Docker/setup/dev details into a collapsible section at the bottom.
+
 [Unreleased]: https://github.com/lumduan/line-oa-messages/commits/main
